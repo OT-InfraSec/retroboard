@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IncomingMessage } from "node:http";
-import { checkBasicAuth, FailureLimiter, sameOrigin } from "./auth";
+import { authCookie, checkAuthCookie, checkBasicAuth, FailureLimiter, sameOrigin } from "./auth";
 import { loadConfig } from "./config";
 import { parseCookies } from "./session";
 
@@ -65,5 +65,16 @@ describe("failure limiter", () => {
     expect(l.blocked("b")).toBe(false);
     now = 1000;
     expect(l.blocked("a")).toBe(false);
+  });
+});
+
+describe("auth cookie", () => {
+  it("accepts only the cookie derived from the current password", () => {
+    const cookie = authCookie("pw", false).split(";")[0]!;
+    expect(checkAuthCookie(`a=1; ${cookie}`, "pw")).toBe(true);
+    expect(checkAuthCookie(cookie, "other")).toBe(false);
+    expect(checkAuthCookie("rb_auth=deadbeef", "pw")).toBe(false);
+    expect(checkAuthCookie(undefined, "pw")).toBe(false);
+    expect(authCookie("pw", true)).toContain("Secure");
   });
 });

@@ -3,7 +3,7 @@ import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import { MAX_MESSAGE_BYTES } from "@retroboard/protocol";
 import { handleApi } from "./api";
-import { checkBasicAuth, FailureLimiter, sameOrigin } from "./auth";
+import { authCookie, checkAuthCookie, checkBasicAuth, FailureLimiter, sameOrigin } from "./auth";
 import type { Config } from "./config";
 import type { BoardRepo } from "./db/repo";
 import type { GithubClient } from "./github";
@@ -76,7 +76,9 @@ export function createApp(deps: AppDeps): App {
     }
 
     const session: SessionInfo = readSession(req) ?? newSession();
-    if (session.isNew) res.setHeader("Set-Cookie", sessionCookie(session.sessionId, secure));
+    const cookies = [authCookie(config.basicAuthPassword, secure)];
+    if (session.isNew) cookies.push(sessionCookie(session.sessionId, secure));
+    res.setHeader("Set-Cookie", cookies);
 
     try {
       if (await handleApi(req, res, session, { config, repo: deps.repo, now: deps.now })) return;
@@ -100,9 +102,12 @@ export function createApp(deps: AppDeps): App {
       socket.write(`HTTP/1.1 ${line}\r\nConnection: close\r\n\r\n`);
       socket.destroy();
     };
-    const auth = authenticate(req);
-    if (auth === 429) return reject("429 Too Many Requests");
-    if (auth !== 200) return reject("401 Unauthorized");
+    // Credentials come from the Basic header or, for deep-link visits, the cookie set at login.
+    if (!checkAuthCookie(req.headers.cookie, config.basicAuthPassword)) {
+      const auth = authenticate(req);
+      if (auth === 429) return reject("429 Too Many Requests");
+      if (auth !== 200) return reject("401 Unauthorized");
+    }
     if (!sameOrigin(req)) return reject("403 Forbidden");
     const session = readSession(req);
     if (!session?.name) return reject("401 Unauthorized");

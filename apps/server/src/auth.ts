@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 
 const digest = (s: string) => createHash("sha256").update(s).digest();
@@ -54,4 +54,23 @@ export class FailureLimiter {
     else f.count += 1;
     if (this.failures.size > 10_000) this.failures.clear();
   }
+}
+
+const AUTH_COOKIE = "rb_auth";
+
+/**
+ * Browsers cache Basic credentials per URL directory and cannot answer a 401 during a
+ * WebSocket handshake, so a deep link (/boards/…) would leave /ws/… without credentials.
+ * After a successful Basic login we therefore also set this cookie, derived from the password
+ * (changing the password invalidates it), which the WebSocket upgrade accepts.
+ */
+const authToken = (password: string) =>
+  createHmac("sha256", password).update("retroboard-auth-cookie-v1").digest("hex");
+
+export const authCookie = (password: string, secure: boolean) =>
+  `${AUTH_COOKIE}=${authToken(password)}; Path=/; Max-Age=${30 * 24 * 3600}; HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`;
+
+export function checkAuthCookie(cookieHeader: string | undefined, password: string): boolean {
+  const value = /(?:^|;\s*)rb_auth=([0-9a-f]{64})(?:;|$)/.exec(cookieHeader ?? "")?.[1];
+  return !!value && timingSafeEqual(Buffer.from(value), Buffer.from(authToken(password)));
 }

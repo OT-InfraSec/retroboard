@@ -95,8 +95,8 @@ test("retro flow with several participants", async ({ browser }) => {
 
   // Done: the full board for everyone, with the issue visible on its card.
   await owner.getByRole("button", { name: "Done", exact: true }).click();
-  await expect(bob.getByText("Alice: deploys are slow")).toBeVisible();
-  await expect(bob.getByText("Bob: stop long meetings")).toBeVisible();
+  await expect(bob.locator(".card-text", { hasText: "Alice: deploys are slow" })).toBeVisible();
+  await expect(bob.locator(".card-text", { hasText: "Bob: stop long meetings" })).toBeVisible();
   await expect(bob.getByRole("link", { name: /#1 / })).toBeVisible();
 
   // The board is listed and survives a reload.

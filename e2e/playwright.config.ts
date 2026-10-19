@@ -7,9 +7,10 @@ export default defineConfig({
   workers: 1,
   use: { baseURL: "http://localhost:3100", httpCredentials: { username: "e2e", password: "pw" } },
   webServer: [
-    { command: "node e2e/fake-github.mjs", port: 4010, reuseExistingServer: false },
+    { command: "node e2e/fake-github.mjs", cwd: "..", port: 4010, reuseExistingServer: false },
     {
       command: "npm run build && npm run start",
+      cwd: "..",
       port: 3100,
       timeout: 180_000,
       reuseExistingServer: false,

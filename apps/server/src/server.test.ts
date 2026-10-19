@@ -144,7 +144,7 @@ describe("http", () => {
 
   it("issues an HttpOnly session cookie and stores the display name", async () => {
     const res = await fetch(`http://${base}/`, { headers: { Authorization: AUTH } });
-    expect(res.headers.getSetCookie()[0]).toMatch(
+    expect(res.headers.getSetCookie().find((c) => c.startsWith("rb_sid="))).toMatch(
       /^rb_sid=[0-9a-f-]{36}; .*HttpOnly.*SameSite=Lax.*Secure/,
     );
     const c = await new Client().init("Ada");
@@ -204,6 +204,24 @@ describe("websocket", () => {
       .map((c) => c.split(";")[0])
       .join("; ");
     await expect(anon.open(id)).rejects.toThrow(/401/);
+  });
+
+  it("accepts the login cookie instead of the Basic header (deep-link visits)", async () => {
+    const c = await new Client().init("Ada");
+    const id = await createBoard(c);
+    const first = await fetch(`http://${base}/`, { headers: { Authorization: AUTH } });
+    const authCookie = first.headers
+      .getSetCookie()
+      .find((x) => x.startsWith("rb_auth="))!
+      .split(";")[0]!;
+    const ws = new WebSocket(`ws://${base}/ws/boards/${id}`, {
+      headers: { Cookie: `${c.cookie}; ${authCookie}` },
+    });
+    await new Promise((res, rej) => {
+      ws.once("open", res);
+      ws.once("error", rej);
+    });
+    ws.close();
   });
 
   it("closes with 4404 for unknown boards", async () => {
