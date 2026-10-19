@@ -457,12 +457,11 @@ button.icon:hover:not(:disabled) {
 
 @media (max-width: 760px) {
   .board-body {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding: 12px;
   }
   .board-side {
     position: static;
-    order: -1;
   }
   .column {
     flex-basis: 84vw;
