@@ -136,6 +136,12 @@ describe("http", () => {
     expect((await fetch(`http://${base}/`, { headers: { Authorization: AUTH } })).status).toBe(200);
   });
 
+  it("sends security headers", async () => {
+    const res = await fetch(`http://${base}/`, { headers: { Authorization: AUTH } });
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
+  });
+
   it("issues an HttpOnly session cookie and stores the display name", async () => {
     const res = await fetch(`http://${base}/`, { headers: { Authorization: AUTH } });
     expect(res.headers.getSetCookie()[0]).toMatch(

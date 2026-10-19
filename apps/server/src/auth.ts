@@ -22,3 +22,36 @@ export function sameOrigin(req: IncomingMessage): boolean {
     return false;
   }
 }
+
+/**
+ * Slows down password guessing: after `max` failures from one address within `windowMs`,
+ * further attempts are refused (without checking the password) until the window passes.
+ * Behind a reverse proxy all users share the proxy's address; the lockout is short for that reason.
+ */
+export class FailureLimiter {
+  private failures = new Map<string, { count: number; since: number }>();
+
+  constructor(
+    private max = 10,
+    private windowMs = 60_000,
+    private now: () => number = Date.now,
+  ) {}
+
+  blocked(key: string): boolean {
+    const f = this.failures.get(key);
+    if (!f) return false;
+    if (this.now() - f.since >= this.windowMs) {
+      this.failures.delete(key);
+      return false;
+    }
+    return f.count >= this.max;
+  }
+
+  recordFailure(key: string): void {
+    const f = this.failures.get(key);
+    if (!f || this.now() - f.since >= this.windowMs)
+      this.failures.set(key, { count: 1, since: this.now() });
+    else f.count += 1;
+    if (this.failures.size > 10_000) this.failures.clear();
+  }
+}

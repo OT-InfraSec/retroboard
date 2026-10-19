@@ -18,7 +18,7 @@ const ui = await loadNext(process.env.NODE_ENV !== "production");
 const app = createApp({
   config,
   repo: boardRepo(db),
-  github: githubClient(config.githubToken, config.githubRepo),
+  github: githubClient(config.githubToken, config.githubRepo, fetch, process.env.GITHUB_API_URL),
   uiHandler: ui.handler,
   uiUpgrade: ui.upgrade,
 });

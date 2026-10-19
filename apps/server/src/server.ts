@@ -3,7 +3,7 @@ import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import { MAX_MESSAGE_BYTES } from "@retroboard/protocol";
 import { handleApi } from "./api";
-import { checkBasicAuth, sameOrigin } from "./auth";
+import { checkBasicAuth, FailureLimiter, sameOrigin } from "./auth";
 import type { Config } from "./config";
 import type { BoardRepo } from "./db/repo";
 import type { GithubClient } from "./github";
@@ -38,9 +38,19 @@ export function createApp(deps: AppDeps): App {
     now: deps.now,
   });
   const secure = config.publicBaseUrl.startsWith("https:");
+  const limiter = new FailureLimiter();
   const unauthorized = (res: ServerResponse) => {
     res.writeHead(401, { "WWW-Authenticate": 'Basic realm="Retroboard", charset="UTF-8"' });
     res.end("Authentication required");
+  };
+  /** 200 = ok, 401 = bad/missing credentials, 429 = too many failures. */
+  const authenticate = (req: IncomingMessage): 200 | 401 | 429 => {
+    const key = req.socket.remoteAddress ?? "";
+    if (limiter.blocked(key)) return 429;
+    if (checkBasicAuth(req.headers.authorization, config.basicAuthPassword)) return 200;
+    // A browser's first request carries no credentials; only count real wrong guesses.
+    if (req.headers.authorization) limiter.recordFailure(key);
+    return 401;
   };
 
   const server = createServer(async (req, res) => {
@@ -49,8 +59,15 @@ export function createApp(deps: AppDeps): App {
       res.writeHead(200, { "Content-Type": "text/plain" });
       return void res.end("ok");
     }
-    if (!checkBasicAuth(req.headers.authorization, config.basicAuthPassword))
-      return unauthorized(res);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Referrer-Policy", "same-origin");
+    const auth = authenticate(req);
+    if (auth === 429) {
+      res.writeHead(429, { "Retry-After": "60" });
+      return void res.end("Too many attempts");
+    }
+    if (auth !== 200) return unauthorized(res);
 
     const method = req.method ?? "GET";
     if (method !== "GET" && method !== "HEAD" && !sameOrigin(req)) {
@@ -83,8 +100,9 @@ export function createApp(deps: AppDeps): App {
       socket.write(`HTTP/1.1 ${line}\r\nConnection: close\r\n\r\n`);
       socket.destroy();
     };
-    if (!checkBasicAuth(req.headers.authorization, config.basicAuthPassword))
-      return reject("401 Unauthorized");
+    const auth = authenticate(req);
+    if (auth === 429) return reject("429 Too Many Requests");
+    if (auth !== 200) return reject("401 Unauthorized");
     if (!sameOrigin(req)) return reject("403 Forbidden");
     const session = readSession(req);
     if (!session?.name) return reject("401 Unauthorized");

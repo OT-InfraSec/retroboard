@@ -13,12 +13,13 @@ export function githubClient(
   token: string,
   repo: string,
   fetchFn: typeof fetch = fetch,
+  apiUrl = "https://api.github.com",
 ): GithubClient {
   return {
     async createIssue(issue) {
       let res: Response;
       try {
-        res = await fetchFn(`https://api.github.com/repos/${repo}/issues`, {
+        res = await fetchFn(`${apiUrl.replace(/\/+$/, "")}/repos/${repo}/issues`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

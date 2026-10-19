@@ -14,14 +14,14 @@ Open `PUBLIC_BASE_URL` (default http://localhost:3000). The browser asks for HTT
 
 ### Configuration
 
-| Variable | Purpose |
-|---|---|
-| `BASIC_AUTH_PASSWORD` | Shared password for the whole app (HTTP and WebSocket) |
-| `GITHUB_TOKEN` | Fine-grained PAT with **Issues: read and write** on the target repo |
-| `GITHUB_REPO` | Target repository, `owner/name` |
-| `PUBLIC_BASE_URL` | Public URL, used for deep links in issues; `https://` also marks cookies `Secure` |
-| `DATABASE_URL` | Postgres connection string (set by compose) |
-| `TEAMS_FILE` | Optional path to the teams JSON (default `config/teams.json`) |
+| Variable              | Purpose                                                                           |
+| --------------------- | --------------------------------------------------------------------------------- |
+| `BASIC_AUTH_PASSWORD` | Shared password for the whole app (HTTP and WebSocket)                            |
+| `GITHUB_TOKEN`        | Fine-grained PAT with **Issues: read and write** on the target repo               |
+| `GITHUB_REPO`         | Target repository, `owner/name`                                                   |
+| `PUBLIC_BASE_URL`     | Public URL, used for deep links in issues; `https://` also marks cookies `Secure` |
+| `DATABASE_URL`        | Postgres connection string (set by compose)                                       |
+| `TEAMS_FILE`          | Optional path to the teams JSON (default `config/teams.json`)                     |
 
 Put the app behind a TLS-terminating reverse proxy that forwards WebSocket upgrades; Basic Auth sends the password with every request.
 

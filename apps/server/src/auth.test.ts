@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IncomingMessage } from "node:http";
-import { checkBasicAuth, sameOrigin } from "./auth";
+import { checkBasicAuth, FailureLimiter, sameOrigin } from "./auth";
 import { loadConfig } from "./config";
 import { parseCookies } from "./session";
 
@@ -50,5 +50,20 @@ describe("config", () => {
     expect(() => loadConfig({ GITHUB_REPO: "bad" }, () => "{}")).toThrow(
       /BASIC_AUTH_PASSWORD[\s\S]*GITHUB_TOKEN[\s\S]*owner\/name[\s\S]*teams/,
     );
+  });
+});
+
+describe("failure limiter", () => {
+  it("blocks an address after too many failures and recovers after the window", () => {
+    let now = 0;
+    const l = new FailureLimiter(3, 1000, () => now);
+    for (let i = 0; i < 3; i++) {
+      expect(l.blocked("a")).toBe(false);
+      l.recordFailure("a");
+    }
+    expect(l.blocked("a")).toBe(true);
+    expect(l.blocked("b")).toBe(false);
+    now = 1000;
+    expect(l.blocked("a")).toBe(false);
   });
 });
