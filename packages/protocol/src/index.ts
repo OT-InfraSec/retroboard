@@ -8,7 +8,10 @@ const text = z.string().max(2000);
 
 /** Messages a client may send. Author names and session ids are never client-supplied. */
 export const ClientMessage = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("changePhase"), phase: z.enum(["write", "group", "discuss", "done"]) }),
+  z.object({
+    type: z.literal("changePhase"),
+    phase: z.enum(["write", "group", "discuss", "done"]),
+  }),
   z.object({ type: z.literal("setReadOnly"), readOnly: z.boolean() }),
   z.object({ type: z.literal("renameBoard"), name: text }),
   z.object({ type: z.literal("addColumn"), name: text }),
@@ -33,7 +36,9 @@ export const ClientMessage = z.discriminatedUnion("type", [
 export type ClientMessage = z.infer<typeof ClientMessage>;
 
 /** `requestId` lets a client correlate an error/result with what it sent. */
-export const ClientEnvelope = z.object({ requestId: z.string().max(64).optional() }).and(ClientMessage);
+export const ClientEnvelope = z
+  .object({ requestId: z.string().max(64).optional() })
+  .and(ClientMessage);
 export type ClientEnvelope = z.infer<typeof ClientEnvelope>;
 
 export type ServerMessage =
