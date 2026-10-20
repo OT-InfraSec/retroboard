@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { composeIssue, deepLink, defaultIssueTitle } from "./issues";
 import { searchBoards, sortBoards } from "./list";
 import { createBoard, defaultBoardName } from "./board";
-import { TEMPLATES } from "./templates";
+import { TEMPLATES, columnTone } from "./templates";
 import { ALICE, newState } from "./testing";
 
 const DAY = 86_400_000;
@@ -81,6 +81,14 @@ describe("board creation", () => {
       expect(r.ok && r.value.columns.map((c) => c.name)).toEqual(t.columns);
       expect(r.ok && r.value.phase).toBe("write");
     }
+  });
+
+  it("every template column has a tone; tones follow names, else position", () => {
+    for (const t of TEMPLATES) expect(t.tones).toHaveLength(t.columns.length);
+    expect(columnTone("Start", 2)).toBe("green");
+    expect(columnTone(" stop ", 0)).toBe("red");
+    expect(columnTone("Custom", 0)).toBe("red");
+    expect(columnTone("Custom", 7)).toBe("green");
   });
 
   it("rejects unknown template / empty name; default name format", () => {

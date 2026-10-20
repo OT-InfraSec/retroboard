@@ -1,0 +1,20 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "retroboard-dev",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "BASIC_AUTH_PASSWORD=pw",
+        "GITHUB_TOKEN=x",
+        "GITHUB_REPO=acme/planning",
+        "PUBLIC_BASE_URL=http://localhost:3000",
+        "DATABASE_URL=pglite:",
+        "npm",
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    }
+  ]
+}

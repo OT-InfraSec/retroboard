@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { defaultIssueTitle, type BoardView } from "@retroboard/domain";
-import { formatDuration } from "@/lib/format";
+import { formatDuration, toneClass } from "@/lib/format";
 import type { Sender } from "@/lib/socket";
 import { Card } from "./Card";
 import { Dialog } from "./Dialog";
@@ -29,6 +29,8 @@ export function Discuss(props: { view: BoardView; receivedAt: number; send: Send
   const rights = view.viewer.hasOwnerRights && !view.readOnly;
   const topicCards = view.cards;
   const canIssue = !view.readOnly && d.currentTopicId !== null;
+  const columnIdx = view.columns.findIndex((c) => c.id === topicCards[0]?.columnId);
+  const column = columnIdx >= 0 ? view.columns[columnIdx] : undefined;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -71,18 +73,21 @@ export function Discuss(props: { view: BoardView; receivedAt: number; send: Send
       {d.count === 0 ? (
         <p className="muted">Nothing to discuss yet. Add a card to get started.</p>
       ) : (
-        <div className={topicCards.length > 1 ? "group" : undefined}>
-          {topicCards.map((c, i) => (
-            <Card
-              key={c.id}
-              card={c}
-              view={view}
-              actions={noop}
-              dnd={false}
-              highlighted={false}
-              issues={i === 0 ? view.issues : []}
-            />
-          ))}
+        <div className={`discuss-topic ${column ? toneClass(column.name, columnIdx) : ""}`}>
+          {column && <span className="column-chip">{column.name}</span>}
+          <div className={topicCards.length > 1 ? "group" : undefined}>
+            {topicCards.map((c, i) => (
+              <Card
+                key={c.id}
+                card={c}
+                view={view}
+                actions={noop}
+                dnd={false}
+                highlighted={false}
+                issues={i === 0 ? view.issues : []}
+              />
+            ))}
+          </div>
         </div>
       )}
 

@@ -10,6 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { useState } from "react";
 import type { BoardView, CardView } from "@retroboard/domain";
+import { toneClass } from "@/lib/format";
 import type { Sender } from "@/lib/socket";
 import { AddCardForm } from "./AddCardForm";
 import { Card } from "./Card";
@@ -81,7 +82,7 @@ export function Columns(props: {
     <DndContext sensors={sensors} onDragEnd={onDragEnd}>
       <div className="columns">
         {view.columns.map((col, idx) => (
-          <Column key={col.id} id={col.id} enabled={dnd}>
+          <Column key={col.id} id={col.id} tone={toneClass(col.name, idx)} enabled={dnd}>
             <header className="col-head">
               <ColumnTitle
                 name={col.name}
@@ -161,16 +162,18 @@ export function Columns(props: {
 
 function Column({
   id,
+  tone,
   enabled,
   children,
 }: {
   id: string;
+  tone: string;
   enabled: boolean;
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${id}`, disabled: !enabled });
   return (
-    <section ref={setNodeRef} className={`column ${isOver ? "over" : ""}`}>
+    <section ref={setNodeRef} className={`column ${tone} ${isOver ? "over" : ""}`}>
       {children}
     </section>
   );

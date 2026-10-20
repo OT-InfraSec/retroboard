@@ -10,6 +10,12 @@
   --warn-bg: #fff4d6;
   --error: #c92a2a;
   --radius: 8px;
+  --tone-red: #fde2e4;
+  --tone-green: #dff3e4;
+  --tone-blue: #dde7fb;
+  --tone-yellow: #fff1cc;
+  --tone-purple: #ece1f7;
+  --tone-teal: #d9f2f2;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -23,6 +29,12 @@
     --accent-text: #10131a;
     --warn-bg: #4a3b10;
     --error: #ff8787;
+    --tone-red: #3d2a2e;
+    --tone-green: #263a2d;
+    --tone-blue: #27314a;
+    --tone-yellow: #3d3522;
+    --tone-purple: #332a42;
+    --tone-teal: #233b3d;
   }
 }
 * {
@@ -319,6 +331,31 @@ button.icon:hover:not(:disabled) {
   gap: 10px;
   min-height: 160px;
 }
+.tone-red {
+  --tone: var(--tone-red);
+}
+.tone-green {
+  --tone: var(--tone-green);
+}
+.tone-blue {
+  --tone: var(--tone-blue);
+}
+.tone-yellow {
+  --tone: var(--tone-yellow);
+}
+.tone-purple {
+  --tone: var(--tone-purple);
+}
+.tone-teal {
+  --tone: var(--tone-teal);
+}
+.column[class*="tone-"] {
+  background: var(--tone);
+  border-color: color-mix(in srgb, var(--tone) 70%, var(--text) 12%);
+}
+.column .card {
+  background: var(--surface);
+}
 .column.over {
   outline: 2px dashed var(--accent);
 }
@@ -424,6 +461,25 @@ button.icon:hover:not(:disabled) {
 }
 .discuss .card-text {
   font-size: 1.25rem;
+}
+.discuss-topic {
+  background: var(--tone, var(--surface));
+  border-radius: calc(var(--radius) + 4px);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.discuss-topic .card {
+  background: var(--surface);
+}
+.column-chip {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--tone, var(--border)) 60%, var(--text) 20%);
 }
 .discuss-bar {
   display: flex;
